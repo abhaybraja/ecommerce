@@ -5,6 +5,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from permissions import IsCustomer, IsAdminUser
+from store.schema import CartItemSchema
 from .models import *
 from .serializers import *
 from .services import generate_discount_if_eligible, get_analytics_summary
@@ -13,15 +14,23 @@ from decimal import Decimal
 @api_view(["POST"])
 @permission_classes([IsAuthenticated, IsCustomer])
 def add_to_cart(request):
-    data = request.data.copy()
-    data['user'] = request.user.id  # assign current user explicitly
-    print(data)
-    
-
-    serializer = CartItemSerializer(data=data)
+    user=request.user
+    serializer = CartItemSchema(data=request.data)
     serializer.is_valid(raise_exception=True)
-    serializer.save()
-    return Response(serializer.data)
+    item_id = serializer.validated_data['item_id']
+    quantity = serializer.validated_data['quantity']
+
+    # find active cart_id (not yet checked out)
+    existing_cart = CartItem.objects.filter(user=user).order_by('-id').first()
+    cart_id = existing_cart.cart_id if existing_cart else uuid.uuid4()
+
+    cart_item = CartItem.objects.create(
+        user=user,
+        cart_id=cart_id,
+        item_id=item_id,
+        quantity=quantity,
+    )
+    return Response(CartItemSerializer(cart_item).data)
 
 @api_view(["GET"])
 def view_cart(request, cart_id):

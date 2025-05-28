@@ -10,7 +10,7 @@ class CartItemSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
-        fields = '__all__'
+        fields = ['id', 'cart_id', 'total_amount', 'discount_code', 'discount_amount','created_at', 'order_status']
 
 class DiscountCodeSerializer(serializers.ModelSerializer):
     class Meta:
