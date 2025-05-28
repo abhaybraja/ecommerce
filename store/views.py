@@ -14,8 +14,11 @@ from decimal import Decimal
 @permission_classes([IsAuthenticated, IsCustomer])
 def add_to_cart(request):
     data = request.data.copy()
-    data['user'] = request.user.id
-    serializer = CartItemSerializer(data=request.data)
+    data['user'] = request.user.id  # assign current user explicitly
+    print(data)
+    
+
+    serializer = CartItemSerializer(data=data)
     serializer.is_valid(raise_exception=True)
     serializer.save()
     return Response(serializer.data)
